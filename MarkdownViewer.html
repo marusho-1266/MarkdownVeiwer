@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Markdown Editor & PDF Tool</title>
+    <!-- Markdown変換ライブラリ (Marked.js) -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body { display: flex; height: 100vh; margin: 0; font-family: sans-serif; }
+        #input-area { width: 50%; padding: 20px; box-sizing: border-box; border-right: 1px solid #ccc; }
+        #preview-area { width: 50%; padding: 20px; box-sizing: border-box; overflow-y: auto; }
+        textarea { width: 100%; height: 90%; resize: none; padding: 10px; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; margin-bottom: 10px;}
+        
+        /* テーブルの罫線スタイル */
+        #preview-area table {
+            border-collapse: collapse;
+            width: auto;
+            margin: 0.5em 0;
+        }
+        #preview-area table th,
+        #preview-area table td {
+            border: 1px solid #333;
+            padding: 4px 8px;
+            text-align: left;
+            white-space: nowrap;
+        }
+        #preview-area table th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+        
+        /* 印刷時のスタイル（プレビュー部分のみ印刷する） */
+        @media print {
+            body { 
+                display: block; 
+                height: auto; 
+                margin: 0; 
+                padding: 0; 
+            }
+            body * { visibility: hidden; }
+            #preview-area, #preview-area * { visibility: visible; }
+            #preview-area { 
+                position: absolute; 
+                left: 0; 
+                top: 0; 
+                width: 100%; 
+                height: auto; 
+                overflow: visible;
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            #preview-area * {
+                max-width: 100%;
+            }
+            /* テーブルの印刷時のスタイル調整 */
+            #preview-area table {
+                max-width: 100%;
+                width: 100% !important;
+                table-layout: auto;
+            }
+            #preview-area table th,
+            #preview-area table td {
+                white-space: normal;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+            }
+        }
+    </style>
+    <!-- 印刷用のスタイルシート -->
+    <style id="print-style"></style>
+</head>
+<body>
+
+    <!-- 入力エリア -->
+    <div id="input-area">
+        <button onclick="window.print()">印刷</button>
+        <div style="margin-bottom: 10px;">
+            <label style="display: block; margin-bottom: 5px;">
+                <input type="checkbox" id="show-header-time" checked> ヘッダーに印刷時間を表示
+            </label>
+            <label style="display: block; margin-bottom: 5px;">
+                <input type="checkbox" id="show-header-title" checked> ヘッダーにタイトルを表示
+            </label>
+            <label style="display: block;">
+                印刷タイトル: <input type="text" id="print-title" placeholder="印刷タイトルを入力" style="width: 100%; padding: 5px; margin-top: 5px; box-sizing: border-box;">
+            </label>
+        </div>
+        <textarea id="markdown-input" placeholder="ここにMarkdownを入力..."># サンプルタイトル
+
+- 項目1
+- 項目2
+
+**太字のテスト**
+        </textarea>
+    </div>
+
+    <!-- プレビューエリア -->
+    <div id="preview-area"></div>
+
+    <script>
+        const input = document.getElementById('markdown-input');
+        const preview = document.getElementById('preview-area');
+        const showHeaderTime = document.getElementById('show-header-time');
+        const showHeaderTitle = document.getElementById('show-header-title');
+        const printTitle = document.getElementById('print-title');
+        const printStyle = document.getElementById('print-style');
+
+        // 印刷スタイルを更新する関数
+        function updatePrintStyle() {
+            let styleRules = '';
+            
+            // フッターの設定：ファイルパスを非表示、ページ番号を「現在ページ/総ページ数」形式で表示
+            styleRules += '@page { @bottom-center { content: ""; } @bottom-left { content: ""; } @bottom-right { content: counter(page) " / " counter(pages); font-size: 8pt; } ';
+            
+            // ヘッダーのタイトルと時間を制御
+            if (showHeaderTitle.checked && printTitle.value.trim()) {
+                // タイトルが入力されている場合は表示
+                const title = printTitle.value.trim().replace(/"/g, '\\"');
+                styleRules += '@top-center { content: "' + title + '"; } ';
+            } else {
+                styleRules += '@top-center { content: ""; } ';
+            }
+            if (showHeaderTime.checked) {
+                // 印刷時間を表示（現在の日時を取得）
+                const now = new Date();
+                const dateStr = now.toLocaleString('ja-JP', { 
+                    year: 'numeric', 
+                    month: '2-digit', 
+                    day: '2-digit', 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                }).replace(/\//g, '/').replace(/,/g, '');
+                styleRules += '@top-right { content: "' + dateStr + '"; font-size: 8pt; } ';
+            } else {
+                styleRules += '@top-right { content: ""; } ';
+            }
+            
+            styleRules += '}\n';
+            
+            printStyle.textContent = styleRules;
+        }
+
+        // チェックボックスの変更時にスタイルを更新
+        showHeaderTime.addEventListener('change', updatePrintStyle);
+        showHeaderTitle.addEventListener('change', updatePrintStyle);
+        printTitle.addEventListener('input', updatePrintStyle);
+
+        // 印刷前にスタイルを更新
+        window.addEventListener('beforeprint', updatePrintStyle);
+
+        // 入力があるたびにHTMLに変換してプレビュー表示
+        input.addEventListener('input', () => {
+            preview.innerHTML = marked.parse(input.value);
+        });
+
+        // 初回実行
+        preview.innerHTML = marked.parse(input.value);
+        updatePrintStyle();
+    </script>
+</body>
+</html>
