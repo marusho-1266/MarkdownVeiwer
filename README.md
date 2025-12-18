@@ -33,9 +33,20 @@ Markdownエディタと印刷ツールを統合したシンプルなWebアプリ
 
 ```
 MarkdownViewer/
-├── MarkdownViewer.html  # メインのHTMLファイル（単一ファイルで完結）
-└── README.md            # このファイル
+├── index.html           # メインのHTMLファイル（単一ファイルで完結）
+├── README.md            # このファイル
+└── .nojekyll            # GitHub PagesでJekyllを無効化するファイル
 ```
+
+## GitHub Pagesでの公開
+
+このプロジェクトをGitHub Pagesで公開する場合：
+
+1. リポジトリのSettings > Pagesで、ソースブランチを選択して公開を有効化します
+2. `.nojekyll`ファイルが含まれているため、Jekyllは無効化され、`index.html`が直接表示されます
+3. 公開後、`https://[ユーザー名].github.io/[リポジトリ名]/` でアクセスできます
+
+**注意**: `.nojekyll`ファイルがない場合、GitHub PagesはJekyllを使用してREADME.mdを自動的にレンダリングするため、`index.html`ではなくREADME.mdが表示されることがあります。
 
 ## 注意事項
 
