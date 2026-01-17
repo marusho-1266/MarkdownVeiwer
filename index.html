@@ -5,6 +5,8 @@
     <title>Markdown Editor & PDF Tool</title>
     <!-- Markdown変換ライブラリ (Marked.js) -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Mermaid図表ライブラリ -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
     <style>
         body { display: flex; height: 100vh; margin: 0; font-family: sans-serif; }
         #input-area { width: 50%; padding: 20px; box-sizing: border-box; border-right: 1px solid #ccc; }
@@ -28,6 +30,12 @@
         #preview-area table th {
             background-color: #f5f5f5;
             font-weight: bold;
+        }
+        
+        /* Mermaid図表のスタイル */
+        #preview-area .mermaid {
+            text-align: center;
+            margin: 1em 0;
         }
         
         /* 印刷時のスタイル（プレビュー部分のみ印刷する） */
@@ -150,13 +158,53 @@
         // 印刷前にスタイルを更新
         window.addEventListener('beforeprint', updatePrintStyle);
 
+        // Mermaidを初期化
+        mermaid.initialize({ 
+            startOnLoad: false,
+            theme: 'default',
+            flowchart: { useMaxWidth: true }
+        });
+
+        // Mermaidコードブロックを処理する関数
+        function processMermaid(html) {
+            // mermaidコードブロックを検出して処理
+            const mermaidRegex = /<pre><code class="language-mermaid">([\s\S]*?)<\/code><\/pre>/g;
+            let processedHtml = html;
+            let mermaidIndex = 0;
+            
+            processedHtml = processedHtml.replace(mermaidRegex, (match, code) => {
+                const mermaidId = 'mermaid-' + mermaidIndex++;
+                // コードブロックをmermaid用のdivに置き換え
+                return '<div class="mermaid" id="' + mermaidId + '">' + code.trim() + '</div>';
+            });
+            
+            return processedHtml;
+        }
+
+        // Mermaid図表をレンダリングする関数
+        function renderMermaid() {
+            const mermaidElements = preview.querySelectorAll('.mermaid');
+            if (mermaidElements.length > 0) {
+                mermaid.run({
+                    nodes: mermaidElements
+                });
+            }
+        }
+
         // 入力があるたびにHTMLに変換してプレビュー表示
         input.addEventListener('input', () => {
-            preview.innerHTML = marked.parse(input.value);
+            let html = marked.parse(input.value);
+            html = processMermaid(html);
+            preview.innerHTML = html;
+            // Mermaid図表をレンダリング
+            renderMermaid();
         });
 
         // 初回実行
-        preview.innerHTML = marked.parse(input.value);
+        let html = marked.parse(input.value);
+        html = processMermaid(html);
+        preview.innerHTML = html;
+        renderMermaid();
         updatePrintStyle();
     </script>
 </body>
