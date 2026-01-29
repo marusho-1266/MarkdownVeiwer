@@ -34,6 +34,22 @@
             font-weight: bold;
         }
         
+        /* 利用方法の案内（画面上部に常時表示） */
+        .usage-hint {
+            margin: 0 0 10px;
+            padding: 0 0 8px;
+            font-size: 13px;
+            color: #666;
+            line-height: 1.5;
+            border-bottom: 1px solid #eee;
+        }
+        .usage-hint code {
+            font-size: 12px;
+            background: #f0f0f0;
+            padding: 1px 5px;
+            border-radius: 3px;
+        }
+        
         /* Mermaid図表のスタイル */
         #preview-area .mermaid {
             text-align: center;
@@ -85,6 +101,7 @@
 
     <!-- 入力エリア -->
     <div id="input-area">
+        <p class="usage-hint">左にMarkdownを入力 → 右でプレビュー。印刷は「印刷」ボタンから。Mermaid図表は <code>```mermaid</code> で記述できます。</p>
         <button onclick="window.print()">印刷</button>
         <div style="margin-bottom: 10px;">
             <label style="display: block; margin-bottom: 5px;">
@@ -103,6 +120,14 @@
 - 項目2
 
 **太字のテスト**
+
+## Mermaid図表のサンプル
+
+```mermaid
+flowchart LR
+    A[開始] --> B[処理]
+    B --> C[終了]
+```
         </textarea>
     </div>
 
