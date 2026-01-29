@@ -52,6 +52,43 @@ MarkdownViewer/
 
 **注意**: `.nojekyll`ファイルがない場合、GitHub PagesはJekyllを使用してREADME.mdを自動的にレンダリングするため、`index.html`ではなくREADME.mdが表示されることがあります。
 
+## Renderでのホスティング
+
+このプロジェクトを [Render](https://render.com/) の Static Site で公開する場合の手順と注意点です。
+
+### 手順
+
+1. [Render Dashboard](https://dashboard.render.com/) で **New > Static Site** を選択
+2. GitHub のリポジトリを接続
+3. デプロイするブランチを指定（例: `main`）
+4. **Build Command**: **空のまま**（ビルド不要な静的HTMLのため）
+5. **Publish Directory**: **`.`**（ルートディレクトリに `index.html` があるため）
+6. **Create Static Site** で作成
+
+### 注意点
+
+- **ビルドコマンド**: 本システムはビルド不要のため、Build Command は**空欄**にしてください。何か入力すると「コマンドがない」等で失敗する場合があります。
+- **Publish Directory**: 必ず **`.`** を指定してください。空や `public` などにすると `index.html` が配信されません。
+- **依存関係の自動検出**: Render はデフォルトで npm 等の依存関係を検出しようとします。本プロジェクトは `package.json` がなく CDN のみのため問題になりませんが、ビルドがスキップされるか短時間で完了する想定です。
+- **無料プラン**: 静的サイトは無料でデプロイできますが、ワークスペースの**月間送信帯域（Outbound Bandwidth）**の枠を消費します（Hobby で 100 GB/月など）。枠超過時は有料になります。
+- **スリープ**: 静的サイトは Web Service と異なり**スリープしません**。常時 CDN から配信されるため、初回アクセス待ちは発生しません。
+- **URL**: デプロイ後は `https://[サービス名].onrender.com` でアクセスできます。カスタムドメインも設定可能です（無料プランではワークスペースあたり 2 ドメインまで）。
+
+### render.yaml で設定する場合（任意）
+
+リポジトリに `render.yaml` を置くと、同じ設定をコードで管理できます。
+
+```yaml
+services:
+  - type: web
+    name: markdown-viewer
+    runtime: static
+    buildCommand: "true"   # ビルド不要のため no-op（空だと失敗する場合があるため）
+    staticPublishPath: .
+```
+
+※ Static Site は `type: web` と `runtime: static` の組み合わせで定義します。Dashboard で「Static Site」を選んだ場合と同じです。
+
 ## 注意事項
 
 - インターネット接続が必要です（Marked.jsとMermaid.jsをCDNから読み込むため）

@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: markdown-viewer
+    runtime: static
+    buildCommand: "true"
+    staticPublishPath: .
