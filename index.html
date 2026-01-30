@@ -10,11 +10,155 @@
     <!-- Mermaid図表ライブラリ -->
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
     <style>
-        body { display: flex; height: 100vh; margin: 0; font-family: sans-serif; }
-        #input-area { width: 50%; padding: 20px; box-sizing: border-box; border-right: 1px solid #ccc; }
-        #preview-area { width: 50%; padding: 20px; box-sizing: border-box; overflow-y: auto; }
-        textarea { width: 100%; height: 90%; resize: none; padding: 10px; }
-        button { padding: 10px 20px; font-size: 16px; cursor: pointer; margin-bottom: 10px;}
+        /* ライト/ダークモード用CSS変数 */
+        :root {
+            --bg-body: #fff;
+            --bg-input-area: #fff;
+            --bg-preview-area: #fff;
+            --bg-editor-wrapper: transparent;
+            --bg-line-numbers: #f5f5f5;
+            --bg-markdown-input: #fff;
+            --border-color: #ccc;
+            --text-color: #333;
+            --text-muted: #666;
+            --usage-hint-border: #eee;
+            --code-bg: #f0f0f0;
+            --table-border: #333;
+            --table-th-bg: #f5f5f5;
+            --input-placeholder: #999;
+        }
+        [data-theme="dark"] {
+            --bg-body: #1e1e1e;
+            --bg-input-area: #1e1e1e;
+            --bg-preview-area: #252526;
+            --bg-editor-wrapper: transparent;
+            --bg-line-numbers: #2d2d2d;
+            --bg-markdown-input: #1e1e1e;
+            --border-color: #404040;
+            --text-color: #d4d4d4;
+            --text-muted: #9d9d9d;
+            --usage-hint-border: #404040;
+            --code-bg: #3c3c3c;
+            --table-border: #555;
+            --table-th-bg: #2d2d2d;
+            --input-placeholder: #6d6d6d;
+        }
+
+        body { 
+            display: flex; 
+            height: 100vh; 
+            margin: 0; 
+            font-family: sans-serif; 
+            background-color: var(--bg-body);
+            color: var(--text-color);
+        }
+        #input-area { 
+            flex: 0 0 auto;
+            width: 50%; 
+            min-width: 20%;
+            max-width: 80%;
+            padding: 20px; 
+            box-sizing: border-box; 
+            border-right: none;
+            background-color: var(--bg-input-area);
+        }
+        /* 左右の幅を変えるリサイザー */
+        #resizer {
+            flex: 0 0 6px;
+            cursor: col-resize;
+            background: var(--border-color);
+            user-select: none;
+        }
+        #resizer:hover {
+            background: var(--text-muted);
+        }
+        #resizer:active {
+            background: var(--text-color);
+        }
+        #preview-area { 
+            flex: 1;
+            min-width: 20%;
+            padding: 20px; 
+            box-sizing: border-box; 
+            overflow-y: auto; 
+            background-color: var(--bg-preview-area);
+        }
+        
+        /* エディタ＋行番号のラッパー */
+        .editor-wrapper {
+            display: flex;
+            position: relative;
+            width: 100%;
+            height: 90%;
+            border: 1px solid var(--border-color);
+            box-sizing: border-box;
+            overflow: hidden;
+            background: var(--bg-editor-wrapper);
+        }
+        .line-numbers {
+            flex-shrink: 0;
+            min-width: 2.5em;
+            padding: 10px 8px 10px 10px;
+            border-right: 1px solid var(--border-color);
+            background-color: var(--bg-line-numbers);
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 1.5;
+            overflow: hidden;
+            user-select: none;
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+        }
+        .line-numbers .line-number-cell {
+            display: flex;
+            align-items: flex-start;
+            justify-content: flex-end;
+            box-sizing: border-box;
+            min-height: 1.5em;
+        }
+        /* 論理行の高さ計測用ミラー（画面外で非表示） */
+        .line-mirror {
+            position: absolute;
+            left: -9999px;
+            top: 0;
+            visibility: hidden;
+            pointer-events: none;
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+            box-sizing: border-box;
+            margin: 0;
+            border: none;
+        }
+        .line-mirror .line-mirror-cell {
+            margin: 0;
+            padding: 0;
+            border: none;
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+        }
+        #markdown-input {
+            flex: 1;
+            width: 100%;
+            height: 100%;
+            min-width: 0;
+            resize: none;
+            padding: 10px;
+            border: none;
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 1.5;
+            box-sizing: border-box;
+            background-color: var(--bg-markdown-input);
+            color: var(--text-color);
+        }
+        #markdown-input::placeholder {
+            color: var(--input-placeholder);
+        }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; margin-bottom: 10px; background: var(--border-color); color: var(--text-color); border: 1px solid var(--border-color); }
         
         /* テーブルの罫線スタイル */
         #preview-area table {
@@ -24,13 +168,13 @@
         }
         #preview-area table th,
         #preview-area table td {
-            border: 1px solid #333;
+            border: 1px solid var(--table-border);
             padding: 4px 8px;
             text-align: left;
             white-space: nowrap;
         }
         #preview-area table th {
-            background-color: #f5f5f5;
+            background-color: var(--table-th-bg);
             font-weight: bold;
         }
         
@@ -39,21 +183,92 @@
             margin: 0 0 10px;
             padding: 0 0 8px;
             font-size: 13px;
-            color: #666;
+            color: var(--text-muted);
             line-height: 1.5;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--usage-hint-border);
         }
         .usage-hint code {
             font-size: 12px;
-            background: #f0f0f0;
+            background: var(--code-bg);
             padding: 1px 5px;
             border-radius: 3px;
         }
+
+        /* ダークモード切替ボタン */
+        .theme-toggle-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .theme-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            font-size: 14px;
+            cursor: pointer;
+            background: var(--code-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-color);
+        }
+        .theme-toggle:hover {
+            filter: brightness(1.1);
+        }
+        .theme-toggle svg {
+            width: 18px;
+            height: 18px;
+        }
         
+        /* プレビュー内の要素（テーマ対応） */
+        #preview-area a { color: #0066cc; }
+        [data-theme="dark"] #preview-area a { color: #58a6ff; }
+        #preview-area blockquote { border-left-color: var(--border-color); color: var(--text-muted); }
+        #preview-area hr { border-color: var(--border-color); }
+        #preview-area pre { background: var(--code-bg); border: 1px solid var(--border-color); }
+        #preview-area code { background: var(--code-bg); color: var(--text-color); }
+
         /* Mermaid図表のスタイル */
         #preview-area .mermaid {
             text-align: center;
             margin: 1em 0;
+        }
+
+        /* テキストエリア用右クリックメニュー */
+        #context-menu {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            min-width: 160px;
+            padding: 4px 0;
+            background: var(--bg-body);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            font-size: 14px;
+        }
+        #context-menu.visible { display: block; }
+        #context-menu .context-menu-item {
+            display: block;
+            width: 100%;
+            padding: 8px 14px;
+            border: none;
+            background: none;
+            color: var(--text-color);
+            text-align: left;
+            font-size: inherit;
+            font-family: inherit;
+            cursor: pointer;
+            box-sizing: border-box;
+        }
+        #context-menu .context-menu-item:hover {
+            background: var(--code-bg);
+        }
+        #context-menu .context-menu-separator {
+            height: 1px;
+            margin: 4px 0;
+            background: var(--border-color);
         }
         
         /* 印刷時のスタイル（プレビュー部分のみ印刷する） */
@@ -65,6 +280,7 @@
                 padding: 0; 
             }
             body * { visibility: hidden; }
+            #resizer { display: none; }
             #preview-area, #preview-area * { visibility: visible; }
             #preview-area { 
                 position: absolute; 
@@ -100,21 +316,23 @@
 <body>
 
     <!-- 入力エリア -->
-    <div id="input-area">
+    <div id="input-area" style="border-right: 1px solid var(--border-color);">
         <p class="usage-hint">左にMarkdownを入力 → 右でプレビュー。印刷は「印刷」ボタンから。Mermaid図表は <code>```mermaid</code> で記述できます。</p>
-        <button onclick="window.print()">印刷</button>
-        <div style="margin-bottom: 10px;">
-            <label style="display: block; margin-bottom: 5px;">
+        <div class="theme-toggle-wrap">
+            <button onclick="window.print()">印刷</button>
+            <button type="button" class="theme-toggle" id="theme-toggle" title="ダークモード切替" aria-label="ダークモード切替">
+                <span class="theme-icon-light" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></span>
+                <span class="theme-icon-dark" aria-hidden="true" style="display:none;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span>
+                <span id="theme-label">ダークモード</span>
+            </button>
+            <label style="display: inline-flex; align-items: center; gap: 6px; margin: 0; color: var(--text-color); cursor: pointer;">
                 <input type="checkbox" id="show-header-time" checked> ヘッダーに印刷時間を表示
             </label>
-            <label style="display: block; margin-bottom: 5px;">
-                <input type="checkbox" id="show-header-title" checked> ヘッダーにタイトルを表示
-            </label>
-            <label style="display: block;">
-                印刷タイトル: <input type="text" id="print-title" placeholder="印刷タイトルを入力" style="width: 100%; padding: 5px; margin-top: 5px; box-sizing: border-box;">
-            </label>
         </div>
-        <textarea id="markdown-input" placeholder="ここにMarkdownを入力..."># サンプルタイトル
+        <div class="editor-wrapper">
+            <div class="line-numbers" id="line-numbers" aria-hidden="true"></div>
+            <div class="line-mirror" id="line-mirror" aria-hidden="true"></div>
+            <textarea id="markdown-input" placeholder="ここにMarkdownを入力..."># サンプルタイトル
 
 - 項目1
 - 項目2
@@ -125,22 +343,222 @@
 
 ```mermaid
 flowchart LR
-    A[開始] --> B[処理]
-    B --> C[終了]
+    A[開始] --&gt; B[処理]
+    B --&gt; C[終了]
 ```
         </textarea>
+        </div>
     </div>
+
+    <!-- リサイザー（ドラッグで左右の幅を変更） -->
+    <div id="resizer" role="separator" aria-label="パネル幅のリサイズ" title="ドラッグで幅を変更"></div>
 
     <!-- プレビューエリア -->
     <div id="preview-area"></div>
 
+    <!-- テキストエリア用右クリックメニュー -->
+    <div id="context-menu" role="menu" aria-label="コンテキストメニュー">
+        <button type="button" class="context-menu-item" data-action="cut" role="menuitem">切り取り</button>
+        <button type="button" class="context-menu-item" data-action="copy" role="menuitem">コピー</button>
+        <button type="button" class="context-menu-item" data-action="paste" role="menuitem">貼り付け</button>
+        <div class="context-menu-separator" role="separator"></div>
+        <button type="button" class="context-menu-item" data-action="page-break" role="menuitem">改ページを挿入</button>
+    </div>
+
     <script>
         const input = document.getElementById('markdown-input');
         const preview = document.getElementById('preview-area');
+        const lineNumbers = document.getElementById('line-numbers');
         const showHeaderTime = document.getElementById('show-header-time');
-        const showHeaderTitle = document.getElementById('show-header-title');
-        const printTitle = document.getElementById('print-title');
         const printStyle = document.getElementById('print-style');
+
+        // ダークモード切替
+        const THEME_KEY = 'markdown-viewer-theme';
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeLabel = document.getElementById('theme-label');
+        const iconLight = document.querySelector('.theme-icon-light');
+        const iconDark = document.querySelector('.theme-icon-dark');
+
+        function getPreferredTheme() {
+            const saved = localStorage.getItem(THEME_KEY);
+            if (saved === 'dark' || saved === 'light') return saved;
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
+            return 'light';
+        }
+
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme === 'dark' ? 'dark' : '');
+            if (themeLabel) themeLabel.textContent = theme === 'dark' ? 'ライトモード' : 'ダークモード';
+            if (iconLight) iconLight.style.display = theme === 'dark' ? 'none' : '';
+            if (iconDark) iconDark.style.display = theme === 'dark' ? '' : 'none';
+            localStorage.setItem(THEME_KEY, theme);
+            if (typeof mermaid !== 'undefined') {
+                mermaid.initialize({ startOnLoad: false, theme: theme === 'dark' ? 'dark' : 'default', flowchart: { useMaxWidth: true } });
+                if (typeof processMermaid === 'function' && typeof renderMermaid === 'function' && input && preview) {
+                    var html = marked.parse(input.value);
+                    html = DOMPurify.sanitize(html);
+                    html = processMermaid(html);
+                    preview.innerHTML = html;
+                    renderMermaid();
+                }
+            }
+        }
+
+        (function initTheme() {
+            applyTheme(getPreferredTheme());
+        })();
+
+        themeToggle.addEventListener('click', function () {
+            var current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+            applyTheme(current === 'dark' ? 'light' : 'dark');
+        });
+
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
+            if (localStorage.getItem(THEME_KEY)) return;
+            applyTheme(e.matches ? 'dark' : 'light');
+        });
+
+        // 左右パネルの幅をマウスでリサイズ
+        const RESIZE_STORAGE_KEY = 'markdown-viewer-split';
+        const inputArea = document.getElementById('input-area');
+        const resizerEl = document.getElementById('resizer');
+        const MIN_LEFT_PERCENT = 20;
+        const MAX_LEFT_PERCENT = 80;
+
+        function setLeftWidth(percent) {
+            var p = Math.max(MIN_LEFT_PERCENT, Math.min(MAX_LEFT_PERCENT, percent));
+            inputArea.style.width = p + '%';
+            try { localStorage.setItem(RESIZE_STORAGE_KEY, String(p)); } catch (e) {}
+        }
+
+        function loadSavedSplit() {
+            try {
+                var saved = localStorage.getItem(RESIZE_STORAGE_KEY);
+                if (saved != null) {
+                    var p = parseFloat(saved, 10);
+                    if (!isNaN(p)) setLeftWidth(p);
+                }
+            } catch (e) {}
+        }
+        loadSavedSplit();
+
+        (function initResizer() {
+            var dragging = false;
+            var startX = 0;
+            var startWidthPx = 0;
+
+            resizerEl.addEventListener('mousedown', function (e) {
+                e.preventDefault();
+                dragging = true;
+                startX = e.clientX;
+                startWidthPx = inputArea.offsetWidth;
+            });
+
+            document.addEventListener('mousemove', function (e) {
+                if (!dragging) return;
+                var bodyWidth = document.body.offsetWidth;
+                var delta = e.clientX - startX;
+                var newWidthPx = startWidthPx + delta;
+                var percent = (newWidthPx / bodyWidth) * 100;
+                setLeftWidth(percent);
+            });
+
+            document.addEventListener('mouseup', function () {
+                dragging = false;
+            });
+        })();
+
+        // 行番号を論理行の表示高さに合わせて更新（折り返し行は1つの行番号で表示）
+        const lineMirror = document.getElementById('line-mirror');
+        const LINE_HEIGHT_EM = 1.5;
+
+        function updateLineNumbers() {
+            const lines = input.value.split('\n');
+            const count = Math.max(lines.length, 1);
+            if (count === 0) {
+                lineNumbers.innerHTML = '<div class="line-number-cell" style="height:1.5em">1</div>';
+                return;
+            }
+            var cs = window.getComputedStyle(input);
+            var mirrorWidth = input.clientWidth;
+            lineMirror.style.width = mirrorWidth + 'px';
+            lineMirror.style.padding = cs.paddingTop + ' ' + cs.paddingRight + ' ' + cs.paddingBottom + ' ' + cs.paddingLeft;
+            lineMirror.style.font = cs.font;
+            lineMirror.style.lineHeight = cs.lineHeight;
+            lineMirror.innerHTML = '';
+            var heights = [];
+            for (var i = 0; i < lines.length; i++) {
+                var cell = document.createElement('div');
+                cell.className = 'line-mirror-cell';
+                cell.textContent = lines[i] || '\u00a0';
+                lineMirror.appendChild(cell);
+            }
+            for (var j = 0; j < lines.length; j++) {
+                var h = lineMirror.children[j].offsetHeight;
+                if (h < 1) h = parseFloat(cs.fontSize) * LINE_HEIGHT_EM;
+                heights.push(h);
+            }
+            lineNumbers.innerHTML = '';
+            for (var k = 0; k < count; k++) {
+                var numCell = document.createElement('div');
+                numCell.className = 'line-number-cell';
+                numCell.style.height = (heights[k] || heights[0]) + 'px';
+                numCell.textContent = k + 1;
+                lineNumbers.appendChild(numCell);
+            }
+        }
+        // 行番号のスクロールをテキストエリアと同期
+        input.addEventListener('scroll', function () { lineNumbers.scrollTop = input.scrollTop; });
+        input.addEventListener('input', updateLineNumbers);
+        var resizeObserver = new ResizeObserver(function () { updateLineNumbers(); });
+        resizeObserver.observe(input);
+        updateLineNumbers();
+
+        // 右クリックメニュー（改ページ・切り取り・コピー・貼り付け）
+        const contextMenu = document.getElementById('context-menu');
+        const PAGE_BREAK_HTML = '\n<div style="page-break-after: always;"></div>\n';
+
+        function hideContextMenu() {
+            contextMenu.classList.remove('visible');
+        }
+
+        function insertPageBreakAtCursor() {
+            const pos = input.selectionStart;
+            const text = input.value;
+            const lineStart = text.lastIndexOf('\n', pos - 1) + 1;
+            const before = text.slice(0, lineStart);
+            const after = text.slice(lineStart);
+            input.value = before + PAGE_BREAK_HTML + after;
+            input.selectionStart = input.selectionEnd = lineStart + PAGE_BREAK_HTML.length;
+            input.focus();
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
+        input.addEventListener('contextmenu', function (e) {
+            e.preventDefault();
+            contextMenu.style.left = e.clientX + 'px';
+            contextMenu.style.top = e.clientY + 'px';
+            contextMenu.classList.add('visible');
+        });
+
+        contextMenu.querySelectorAll('.context-menu-item').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                const action = this.getAttribute('data-action');
+                if (action === 'page-break') {
+                    insertPageBreakAtCursor();
+                } else if (action === 'cut' || action === 'copy' || action === 'paste') {
+                    input.focus();
+                    document.execCommand(action);
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+                hideContextMenu();
+            });
+        });
+
+        document.addEventListener('click', hideContextMenu);
+        document.addEventListener('contextmenu', function (e) {
+            if (!contextMenu.contains(e.target) && e.target !== input) hideContextMenu();
+        });
 
         // 印刷スタイルを更新する関数
         function updatePrintStyle() {
@@ -149,14 +567,8 @@ flowchart LR
             // フッターの設定：ファイルパスを非表示、ページ番号を「現在ページ/総ページ数」形式で表示
             styleRules += '@page { @bottom-center { content: ""; } @bottom-left { content: ""; } @bottom-right { content: counter(page) " / " counter(pages); font-size: 8pt; } ';
             
-            // ヘッダーのタイトルと時間を制御
-            if (showHeaderTitle.checked && printTitle.value.trim()) {
-                // タイトルが入力されている場合は表示
-                const title = printTitle.value.trim().replace(/"/g, '\\"');
-                styleRules += '@top-center { content: "' + title + '"; } ';
-            } else {
-                styleRules += '@top-center { content: ""; } ';
-            }
+            // ヘッダーの時間を制御（タイトルは非表示）
+            styleRules += '@top-center { content: ""; } ';
             if (showHeaderTime.checked) {
                 // 印刷時間を表示（現在の日時を取得）
                 const now = new Date();
@@ -179,8 +591,6 @@ flowchart LR
 
         // チェックボックスの変更時にスタイルを更新
         showHeaderTime.addEventListener('change', updatePrintStyle);
-        showHeaderTitle.addEventListener('change', updatePrintStyle);
-        printTitle.addEventListener('input', updatePrintStyle);
 
         // 印刷前にスタイルを更新
         window.addEventListener('beforeprint', updatePrintStyle);
