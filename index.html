@@ -75,9 +75,24 @@
         #resizer:active {
             background: var(--text-color);
         }
-        #preview-area { 
+        /* 右側ラッパー（操作説明＋プレビュー表示領域） */
+        #preview-wrapper {
             flex: 1;
             min-width: 20%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background-color: var(--bg-preview-area);
+        }
+        #preview-wrapper .usage-hint {
+            flex-shrink: 0;
+            margin: 0;
+            padding: 12px 20px 8px;
+            border-bottom: 1px solid var(--usage-hint-border);
+        }
+        #preview-area { 
+            flex: 1;
+            min-height: 0;
             padding: 20px; 
             box-sizing: border-box; 
             overflow-y: auto; 
@@ -194,31 +209,40 @@
             border-radius: 3px;
         }
 
-        /* ダークモード切替ボタン */
+        /* ダークモード切替・印刷ボタンなど（コンパクト表示） */
         .theme-toggle-wrap {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            margin-bottom: 10px;
+            gap: 4px;
+            margin-bottom: 5px;
+        }
+        .theme-toggle-wrap > button {
+            padding: 5px 10px;
+            font-size: 12px;
+            margin-bottom: 0;
+        }
+        .theme-toggle-wrap label {
+            font-size: 12px;
+            gap: 4px;
         }
         .theme-toggle {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            padding: 8px 14px;
-            font-size: 14px;
+            gap: 3px;
+            padding: 4px 8px;
+            font-size: 12px;
             cursor: pointer;
             background: var(--code-bg);
             border: 1px solid var(--border-color);
-            border-radius: 6px;
+            border-radius: 4px;
             color: var(--text-color);
         }
         .theme-toggle:hover {
             filter: brightness(1.1);
         }
         .theme-toggle svg {
-            width: 18px;
-            height: 18px;
+            width: 14px;
+            height: 14px;
         }
         
         /* プレビュー内の要素（テーマ対応） */
@@ -281,6 +305,7 @@
             }
             body * { visibility: hidden; }
             #resizer { display: none; }
+            #preview-wrapper .usage-hint { display: none; }
             #preview-area, #preview-area * { visibility: visible; }
             #preview-area { 
                 position: absolute; 
@@ -317,7 +342,6 @@
 
     <!-- 入力エリア -->
     <div id="input-area" style="border-right: 1px solid var(--border-color);">
-        <p class="usage-hint">左にMarkdownを入力 → 右でプレビュー。印刷は「印刷」ボタンから。Mermaid図表は <code>```mermaid</code> で記述できます。</p>
         <div class="theme-toggle-wrap">
             <button onclick="window.print()">印刷</button>
             <button type="button" class="theme-toggle" id="theme-toggle" title="ダークモード切替" aria-label="ダークモード切替">
@@ -327,6 +351,9 @@
             </button>
             <label style="display: inline-flex; align-items: center; gap: 6px; margin: 0; color: var(--text-color); cursor: pointer;">
                 <input type="checkbox" id="show-header-time" checked> ヘッダーに印刷時間を表示
+            </label>
+            <label style="display: inline-flex; align-items: center; gap: 6px; margin: 0; color: var(--text-color); cursor: pointer;">
+                <input type="checkbox" id="sync-scroll"> スクロールを連動
             </label>
         </div>
         <div class="editor-wrapper">
@@ -353,8 +380,11 @@ flowchart LR
     <!-- リサイザー（ドラッグで左右の幅を変更） -->
     <div id="resizer" role="separator" aria-label="パネル幅のリサイズ" title="ドラッグで幅を変更"></div>
 
-    <!-- プレビューエリア -->
-    <div id="preview-area"></div>
+    <!-- プレビューエリア（操作説明＋表示領域） -->
+    <div id="preview-wrapper">
+        <p class="usage-hint">左にMarkdownを入力 → 右でプレビュー。印刷は「印刷」ボタンから。Mermaid図表は <code>```mermaid</code> で記述できます。</p>
+        <div id="preview-area"></div>
+    </div>
 
     <!-- テキストエリア用右クリックメニュー -->
     <div id="context-menu" role="menu" aria-label="コンテキストメニュー">
@@ -510,6 +540,36 @@ flowchart LR
         // 行番号のスクロールをテキストエリアと同期
         input.addEventListener('scroll', function () { lineNumbers.scrollTop = input.scrollTop; });
         input.addEventListener('input', updateLineNumbers);
+
+        // 左右のスクロール連動（チェック時は同じ割合の位置を表示）
+        const syncScrollCheckbox = document.getElementById('sync-scroll');
+        let syncingScroll = false;
+
+        function getScrollRatio(el) {
+            const max = Math.max(1, el.scrollHeight - el.clientHeight);
+            return el.scrollTop / max;
+        }
+
+        function setScrollByRatio(el, ratio) {
+            const max = Math.max(1, el.scrollHeight - el.clientHeight);
+            el.scrollTop = ratio * max;
+        }
+
+        input.addEventListener('scroll', function () {
+            if (!syncScrollCheckbox || !syncScrollCheckbox.checked || syncingScroll) return;
+            syncingScroll = true;
+            setScrollByRatio(preview, getScrollRatio(input));
+            requestAnimationFrame(function () { syncingScroll = false; });
+        });
+
+        preview.addEventListener('scroll', function () {
+            if (!syncScrollCheckbox || !syncScrollCheckbox.checked || syncingScroll) return;
+            syncingScroll = true;
+            var ratio = getScrollRatio(preview);
+            setScrollByRatio(input, ratio);
+            lineNumbers.scrollTop = input.scrollTop;
+            requestAnimationFrame(function () { syncingScroll = false; });
+        });
         var resizeObserver = new ResizeObserver(function () { updateLineNumbers(); });
         resizeObserver.observe(input);
         updateLineNumbers();
