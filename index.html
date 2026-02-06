@@ -303,6 +303,12 @@
             margin: 4px 0;
             background: var(--border-color);
         }
+
+        /* ドラッグオーバー時の視覚フィードバック */
+        #input-area.input-area-dragover {
+            outline: 2px dashed var(--border-color);
+            background-color: var(--code-bg);
+        }
         
         /* 印刷時のスタイル（プレビュー部分のみ印刷する） */
         @media print {
@@ -350,7 +356,7 @@
 <body>
 
     <!-- 入力エリア -->
-    <div id="input-area" style="border-right: 1px solid var(--border-color);">
+    <div id="input-area" role="region" aria-label="Markdown入力エリア。ここに .md, .markdown または .txt ファイルをドロップして読み込めます。" style="border-right: 1px solid var(--border-color);">
         <div class="theme-toggle-wrap">
             <button onclick="window.print()">印刷</button>
             <button type="button" class="theme-toggle" id="theme-toggle" title="ダークモード切替" aria-label="ダークモード切替">
@@ -506,6 +512,83 @@ flowchart LR
                 dragging = false;
             });
         })();
+
+        // ローカル .md / .txt ファイルのドラッグ＆ドロップ読み込み
+        var ALLOWED_EXTENSIONS = ['.md', '.markdown', '.txt'];
+        function isAllowedFile(file) {
+            var name = (file.name || '').toLowerCase();
+            return ALLOWED_EXTENSIONS.some(function (ext) { return name.endsWith(ext); });
+        }
+        inputArea.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.dataTransfer.dropEffect = 'copy';
+            inputArea.classList.add('input-area-dragover');
+        });
+        inputArea.addEventListener('dragleave', function (e) {
+            if (!inputArea.contains(e.relatedTarget)) {
+                inputArea.classList.remove('input-area-dragover');
+            }
+        });
+        inputArea.addEventListener('drop', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            inputArea.classList.remove('input-area-dragover');
+            var files = e.dataTransfer.files;
+            if (!files || files.length === 0) return;
+            var file = files[0];
+            if (!isAllowedFile(file)) {
+                alert('テキストまたはMarkdownファイル（' + ALLOWED_EXTENSIONS.join(', ') + '）をドロップしてください。');
+                return;
+            }
+            // 4.6 文字コード: BOM を優先し、U+FFFD 検出時は自動再読せずユーザー確認で Shift_JIS 再読
+            function applyDroppedText(text) {
+                input.value = text;
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            var reader = new FileReader();
+            reader.onload = function (ev) {
+                var buf = ev.target.result;
+                var bytes = new Uint8Array(buf);
+                var text;
+                // UTF-8 BOM (EF BB BF) があればそれを信頼して BOM 以降を UTF-8 として解釈
+                if (bytes.length >= 3 && bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) {
+                    text = new TextDecoder('UTF-8').decode(bytes.subarray(3));
+                    applyDroppedText(text);
+                    return;
+                }
+                text = new TextDecoder('UTF-8').decode(bytes);
+                if (text.indexOf('\uFFFD') === -1) {
+                    applyDroppedText(text);
+                    return;
+                }
+                // U+FFFD あり（BOM なし）: Shift_JIS で読み直す（確認なし）
+                var reader2 = new FileReader();
+                reader2.onload = function (ev2) {
+                    applyDroppedText(ev2.target.result);
+                };
+                reader2.onerror = function () {
+                    alert('ファイルを読み込めませんでした。');
+                };
+                reader2.readAsText(file, 'Shift_JIS');
+            };
+            reader.onerror = function () {
+                alert('ファイルを読み込めませんでした。');
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        // 右側の表示領域ではファイルをドロップできないようにする
+        var previewWrapper = document.getElementById('preview-wrapper');
+        previewWrapper.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.dataTransfer.dropEffect = 'none';
+        });
+        previewWrapper.addEventListener('drop', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        });
 
         // 行番号を論理行の表示高さに合わせて更新（折り返し行は1つの行番号で表示）
         const lineMirror = document.getElementById('line-mirror');
