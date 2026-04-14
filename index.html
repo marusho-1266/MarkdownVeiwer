@@ -319,6 +319,8 @@
                 padding: 0; 
             }
             body * { visibility: hidden; }
+            /* 印刷時は左ペインをレイアウトから外す（visibility では高さが残り余白ページの原因になる） */
+            #input-area { display: none; }
             #resizer { display: none; }
             #preview-wrapper .usage-hint { display: none; }
             #preview-area, #preview-area * { visibility: visible; }
