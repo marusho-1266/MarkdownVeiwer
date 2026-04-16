@@ -54,12 +54,50 @@
         }
 
         body { 
-            display: flex; 
+            display: flex;
+            flex-direction: column;
             height: 100vh; 
             margin: 0; 
             font-family: sans-serif; 
             background-color: var(--bg-body);
             color: var(--text-color);
+        }
+        /* ツールバー（印刷・テーマ・左パネル折りたたみ） */
+        #app-header {
+            flex-shrink: 0;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px 12px;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--usage-hint-border);
+            background-color: var(--bg-body);
+        }
+        #main-workspace {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+            width: 100%;
+            box-sizing: border-box;
+            position: relative;
+        }
+        /* エディタ折りたたみ時：固定の「エディタを表示」とプレビューが被らないよう左にガター */
+        body.editor-pane-collapsed #main-workspace {
+            padding-left: var(--expand-editor-gutter, 3rem);
+        }
+        body.editor-pane-collapsed #main-workspace.main-workspace-gutter-dragover::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: var(--expand-editor-gutter, 3rem);
+            box-sizing: border-box;
+            pointer-events: none;
+            z-index: 1;
+            background-color: var(--code-bg);
+            outline: 2px dashed var(--border-color);
+            outline-offset: -1px;
         }
         #input-area { 
             flex: 0 0 auto;
@@ -70,6 +108,44 @@
             box-sizing: border-box; 
             border-right: none;
             background-color: var(--bg-input-area);
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            min-width: 0;
+        }
+        body.editor-pane-collapsed #input-area {
+            display: none;
+        }
+        body.editor-pane-collapsed #resizer {
+            display: none;
+        }
+        /* 折りたたみ時：左端からエディタを再表示 */
+        #expand-editor-pane {
+            display: none;
+            position: fixed;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 50;
+            padding: 10px 6px;
+            margin: 0;
+            font-size: 13px;
+            cursor: pointer;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            letter-spacing: 0.05em;
+            border: 1px solid var(--border-color);
+            border-left: none;
+            border-radius: 0 6px 6px 0;
+            background: var(--code-bg);
+            color: var(--text-color);
+            box-shadow: 2px 0 8px rgba(0,0,0,0.12);
+        }
+        #expand-editor-pane:hover {
+            filter: brightness(1.08);
+        }
+        body.editor-pane-collapsed #expand-editor-pane {
+            display: block;
         }
         /* 左右の幅を変えるリサイザー */
         #resizer {
@@ -84,7 +160,7 @@
         #resizer:active {
             background: var(--text-color);
         }
-        /* 右側ラッパー（操作説明＋プレビュー表示領域） */
+        /* 右側ラッパー（プレビュー表示領域） */
         #preview-wrapper {
             flex: 1;
             min-width: 20%;
@@ -92,12 +168,6 @@
             flex-direction: column;
             overflow: hidden;
             background-color: var(--bg-preview-area);
-        }
-        #preview-wrapper .usage-hint {
-            flex-shrink: 0;
-            margin: 0;
-            padding: 12px 20px 8px;
-            border-bottom: 1px solid var(--usage-hint-border);
         }
         #preview-area { 
             flex: 1;
@@ -113,7 +183,8 @@
             display: flex;
             position: relative;
             width: 100%;
-            height: 90%;
+            flex: 1;
+            min-height: 0;
             border: 1px solid var(--border-color);
             box-sizing: border-box;
             overflow: hidden;
@@ -202,22 +273,6 @@
             font-weight: bold;
         }
         
-        /* 利用方法の案内（画面上部に常時表示） */
-        .usage-hint {
-            margin: 0 0 10px;
-            padding: 0 0 8px;
-            font-size: 13px;
-            color: var(--text-muted);
-            line-height: 1.5;
-            border-bottom: 1px solid var(--usage-hint-border);
-        }
-        .usage-hint code {
-            font-size: 12px;
-            background: var(--code-bg);
-            padding: 1px 5px;
-            border-radius: 3px;
-        }
-
         /* ダークモード切替・印刷ボタンなど（コンパクト表示） */
         .theme-toggle-wrap {
             display: inline-flex;
@@ -225,33 +280,52 @@
             gap: 4px;
             margin-bottom: 5px;
         }
+        /* ツールバー内ボタン（印刷・エディタ・テーマ・ヘルプ）を同一サイズ・直角に統一 */
         .theme-toggle-wrap > button {
             padding: 5px 10px;
             font-size: 12px;
+            line-height: 1.5;
             margin-bottom: 0;
+            border-radius: 0;
+            box-sizing: border-box;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            /* アイコン＋ラベル行とテキストのみ行の高さ差を吸収（テーマボタンに合わせる） */
+            min-height: 32px;
+            cursor: pointer;
+        }
+        .theme-toggle-wrap > #open-help:hover {
+            filter: brightness(1.05);
         }
         .theme-toggle-wrap label {
             font-size: 12px;
             gap: 4px;
         }
         .theme-toggle {
-            display: inline-flex;
-            align-items: center;
             gap: 3px;
-            padding: 4px 8px;
-            font-size: 12px;
-            cursor: pointer;
             background: var(--code-bg);
             border: 1px solid var(--border-color);
-            border-radius: 4px;
             color: var(--text-color);
         }
         .theme-toggle:hover {
             filter: brightness(1.1);
         }
+        /* SVG をインライン扱いにしないとベースライン下に余白が出てボタンだけ高く見える */
+        .theme-toggle .theme-icon-light,
+        .theme-toggle .theme-icon-dark {
+            display: inline-flex;
+            align-items: center;
+            line-height: 0;
+        }
         .theme-toggle svg {
             width: 14px;
             height: 14px;
+            display: block;
+            flex-shrink: 0;
+        }
+        #theme-label {
+            line-height: 1.5;
         }
         
         /* プレビュー内の要素（テーマ対応） */
@@ -319,10 +393,14 @@
                 padding: 0; 
             }
             body * { visibility: hidden; }
+            #app-header { display: none; }
+            #expand-editor-pane { display: none !important; }
+            body.editor-pane-collapsed #main-workspace {
+                padding-left: 0 !important;
+            }
             /* 印刷時は左ペインをレイアウトから外す（visibility では高さが残り余白ページの原因になる） */
             #input-area { display: none; }
             #resizer { display: none; }
-            #preview-wrapper .usage-hint { display: none; }
             #preview-area, #preview-area * { visibility: visible; }
             #preview-area { 
                 position: absolute; 
@@ -357,15 +435,16 @@
 </head>
 <body>
 
-    <!-- 入力エリア -->
-    <div id="input-area" role="region" aria-label="Markdown入力エリア。ここに .md, .markdown または .txt ファイルをドロップして読み込めます。" style="border-right: 1px solid var(--border-color);">
+    <header id="app-header">
         <div class="theme-toggle-wrap">
             <button onclick="window.print()">印刷</button>
+            <button type="button" id="toggle-editor-pane" title="左のMarkdown入力エリアを折りたたみ／表示" aria-expanded="true" aria-controls="input-area">エディタを隠す</button>
             <button type="button" class="theme-toggle" id="theme-toggle" title="ダークモード切替" aria-label="ダークモード切替">
                 <span class="theme-icon-light" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg></span>
                 <span class="theme-icon-dark" aria-hidden="true" style="display:none;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span>
                 <span id="theme-label">ダークモード</span>
             </button>
+            <button type="button" id="open-help" title="手順・ヘルプを別ウィンドウで開きます（ポップアップがブロックされた場合はこのタブで開きます）">ヘルプ</button>
             <label style="display: inline-flex; align-items: center; gap: 6px; margin: 0; color: var(--text-color); cursor: pointer;">
                 <input type="checkbox" id="show-header-time" checked> ヘッダーに印刷時間を表示
             </label>
@@ -373,6 +452,11 @@
                 <input type="checkbox" id="sync-scroll"> スクロールを連動
             </label>
         </div>
+    </header>
+
+    <div id="main-workspace">
+    <!-- 入力エリア -->
+    <div id="input-area" role="region" aria-label="Markdown入力エリア。ここに .md, .markdown または .txt ファイルをドロップして読み込めます。" style="border-right: 1px solid var(--border-color);">
         <div class="editor-wrapper">
             <div class="line-numbers" id="line-numbers" aria-hidden="true"></div>
             <div class="line-mirror" id="line-mirror" aria-hidden="true"></div>
@@ -397,11 +481,13 @@ flowchart LR
     <!-- リサイザー（ドラッグで左右の幅を変更） -->
     <div id="resizer" role="separator" aria-label="パネル幅のリサイズ" title="ドラッグで幅を変更"></div>
 
-    <!-- プレビューエリア（操作説明＋表示領域） -->
+    <!-- プレビューエリア -->
     <div id="preview-wrapper">
-        <p class="usage-hint">左にMarkdownを入力 → 右でプレビュー。印刷は「印刷」ボタンから。Mermaid図表は <code>```mermaid</code> で記述できます。</p>
         <div id="preview-area"></div>
     </div>
+    </div><!-- /#main-workspace -->
+
+    <button type="button" id="expand-editor-pane" aria-controls="input-area" title="Markdown入力エリアを表示">エディタを表示</button>
 
     <!-- テキストエリア用右クリックメニュー -->
     <div id="context-menu" role="menu" aria-label="コンテキストメニュー">
@@ -410,6 +496,8 @@ flowchart LR
         <button type="button" class="context-menu-item" data-action="paste" role="menuitem">貼り付け</button>
         <div class="context-menu-separator" role="separator"></div>
         <button type="button" class="context-menu-item" data-action="page-break" role="menuitem">改ページを挿入</button>
+        <div class="context-menu-separator" role="separator"></div>
+        <button type="button" class="context-menu-item" data-action="toggle-editor-pane" role="menuitem" id="context-menu-toggle-editor">エディタを隠す</button>
     </div>
 
     <script>
@@ -467,10 +555,112 @@ flowchart LR
 
         // 左右パネルの幅をマウスでリサイズ
         const RESIZE_STORAGE_KEY = 'markdown-viewer-split';
+        const mainWorkspace = document.getElementById('main-workspace');
         const inputArea = document.getElementById('input-area');
         const resizerEl = document.getElementById('resizer');
+        const EDITOR_PANE_COLLAPSED_KEY = 'markdown-viewer-editor-collapsed';
+        const toggleEditorPaneBtn = document.getElementById('toggle-editor-pane');
+        const expandEditorPaneBtn = document.getElementById('expand-editor-pane');
         const MIN_LEFT_PERCENT = 20;
         const MAX_LEFT_PERCENT = 80;
+
+        function applyEditorPaneCollapsed(collapsed) {
+            document.body.classList.toggle('editor-pane-collapsed', !!collapsed);
+            if (toggleEditorPaneBtn) {
+                toggleEditorPaneBtn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+                toggleEditorPaneBtn.textContent = collapsed ? 'エディタを表示' : 'エディタを隠す';
+            }
+            try { localStorage.setItem(EDITOR_PANE_COLLAPSED_KEY, collapsed ? '1' : '0'); } catch (e) {}
+        }
+
+        function loadEditorPaneCollapsed() {
+            try {
+                var v = localStorage.getItem(EDITOR_PANE_COLLAPSED_KEY);
+                applyEditorPaneCollapsed(v === '1');
+            } catch (e) {}
+        }
+        loadEditorPaneCollapsed();
+
+        if (toggleEditorPaneBtn) {
+            toggleEditorPaneBtn.addEventListener('click', function () {
+                applyEditorPaneCollapsed(!document.body.classList.contains('editor-pane-collapsed'));
+            });
+        }
+        function clearCollapsedGutterDragHighlight() {
+            if (mainWorkspace) mainWorkspace.classList.remove('main-workspace-gutter-dragover');
+        }
+        function isPointerInCollapsedEditorGutter(e) {
+            if (!document.body.classList.contains('editor-pane-collapsed') || !mainWorkspace) return false;
+            var r = mainWorkspace.getBoundingClientRect();
+            var pl = parseFloat(window.getComputedStyle(mainWorkspace).paddingLeft) || 0;
+            return e.clientX >= r.left && e.clientX < r.left + pl;
+        }
+        if (expandEditorPaneBtn) {
+            expandEditorPaneBtn.addEventListener('click', function () {
+                applyEditorPaneCollapsed(false);
+            });
+            expandEditorPaneBtn.addEventListener('dragover', function (e) {
+                if (!document.body.classList.contains('editor-pane-collapsed')) return;
+                e.preventDefault();
+                e.stopPropagation();
+                e.dataTransfer.dropEffect = 'copy';
+                if (mainWorkspace) mainWorkspace.classList.add('main-workspace-gutter-dragover');
+            });
+            expandEditorPaneBtn.addEventListener('dragleave', function (e) {
+                if (!expandEditorPaneBtn.contains(e.relatedTarget)) {
+                    clearCollapsedGutterDragHighlight();
+                }
+            });
+            expandEditorPaneBtn.addEventListener('drop', function (e) {
+                if (!document.body.classList.contains('editor-pane-collapsed')) return;
+                e.preventDefault();
+                e.stopPropagation();
+                clearCollapsedGutterDragHighlight();
+                var files = e.dataTransfer.files;
+                if (files && files.length > 0) loadDroppedMarkdownFile(files[0]);
+            });
+        }
+
+        (function syncExpandEditorGutter() {
+            var expandBtn = document.getElementById('expand-editor-pane');
+            if (!expandBtn) return;
+            function applyGutter() {
+                if (!document.body.classList.contains('editor-pane-collapsed')) {
+                    document.documentElement.style.removeProperty('--expand-editor-gutter');
+                    return;
+                }
+                requestAnimationFrame(function () {
+                    requestAnimationFrame(function () {
+                        if (!document.body.classList.contains('editor-pane-collapsed')) return;
+                        var w = expandBtn.offsetWidth;
+                        if (w < 12) w = 48;
+                        document.documentElement.style.setProperty('--expand-editor-gutter', (w + 8) + 'px');
+                    });
+                });
+            }
+            if (typeof ResizeObserver !== 'undefined') {
+                new ResizeObserver(applyGutter).observe(expandBtn);
+            }
+            window.addEventListener('resize', applyGutter);
+            var mo = new MutationObserver(applyGutter);
+            mo.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+            applyGutter();
+        })();
+
+        (function initHelpWindow() {
+            var helpBtn = document.getElementById('open-help');
+            if (!helpBtn) return;
+            var HELP_WINDOW_NAME = 'markdown-viewer-help';
+            helpBtn.addEventListener('click', function () {
+                var url = new URL('docs/help.html', window.location.href).href;
+                var w = window.open(url, HELP_WINDOW_NAME);
+                if (!w) {
+                    window.location.href = url;
+                    return;
+                }
+                try { w.focus(); } catch (e) {}
+            });
+        })();
 
         function setLeftWidth(percent) {
             var p = Math.max(MIN_LEFT_PERCENT, Math.min(MAX_LEFT_PERCENT, percent));
@@ -503,7 +693,7 @@ flowchart LR
 
             document.addEventListener('mousemove', function (e) {
                 if (!dragging) return;
-                var bodyWidth = document.body.offsetWidth;
+                var bodyWidth = mainWorkspace ? mainWorkspace.offsetWidth : document.body.offsetWidth;
                 var delta = e.clientX - startX;
                 var newWidthPx = startWidthPx + delta;
                 var percent = (newWidthPx / bodyWidth) * 100;
@@ -520,6 +710,44 @@ flowchart LR
         function isAllowedFile(file) {
             var name = (file.name || '').toLowerCase();
             return ALLOWED_EXTENSIONS.some(function (ext) { return name.endsWith(ext); });
+        }
+        function loadDroppedMarkdownFile(file) {
+            if (!isAllowedFile(file)) {
+                alert('テキストまたはMarkdownファイル（' + ALLOWED_EXTENSIONS.join(', ') + '）をドロップしてください。');
+                return;
+            }
+            function applyDroppedText(text) {
+                input.value = text;
+                input.dispatchEvent(new Event('input', { bubbles: true }));
+            }
+            var reader = new FileReader();
+            reader.onload = function (ev) {
+                var buf = ev.target.result;
+                var bytes = new Uint8Array(buf);
+                var text;
+                if (bytes.length >= 3 && bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) {
+                    text = new TextDecoder('UTF-8').decode(bytes.subarray(3));
+                    applyDroppedText(text);
+                    return;
+                }
+                text = new TextDecoder('UTF-8').decode(bytes);
+                if (text.indexOf('\uFFFD') === -1) {
+                    applyDroppedText(text);
+                    return;
+                }
+                var reader2 = new FileReader();
+                reader2.onload = function (ev2) {
+                    applyDroppedText(ev2.target.result);
+                };
+                reader2.onerror = function () {
+                    alert('ファイルを読み込めませんでした。');
+                };
+                reader2.readAsText(file, 'Shift_JIS');
+            };
+            reader.onerror = function () {
+                alert('ファイルを読み込めませんでした。');
+            };
+            reader.readAsArrayBuffer(file);
         }
         inputArea.addEventListener('dragover', function (e) {
             e.preventDefault();
@@ -538,46 +766,7 @@ flowchart LR
             inputArea.classList.remove('input-area-dragover');
             var files = e.dataTransfer.files;
             if (!files || files.length === 0) return;
-            var file = files[0];
-            if (!isAllowedFile(file)) {
-                alert('テキストまたはMarkdownファイル（' + ALLOWED_EXTENSIONS.join(', ') + '）をドロップしてください。');
-                return;
-            }
-            // 4.6 文字コード: BOM を優先し、U+FFFD 検出時は自動再読せずユーザー確認で Shift_JIS 再読
-            function applyDroppedText(text) {
-                input.value = text;
-                input.dispatchEvent(new Event('input', { bubbles: true }));
-            }
-            var reader = new FileReader();
-            reader.onload = function (ev) {
-                var buf = ev.target.result;
-                var bytes = new Uint8Array(buf);
-                var text;
-                // UTF-8 BOM (EF BB BF) があればそれを信頼して BOM 以降を UTF-8 として解釈
-                if (bytes.length >= 3 && bytes[0] === 0xEF && bytes[1] === 0xBB && bytes[2] === 0xBF) {
-                    text = new TextDecoder('UTF-8').decode(bytes.subarray(3));
-                    applyDroppedText(text);
-                    return;
-                }
-                text = new TextDecoder('UTF-8').decode(bytes);
-                if (text.indexOf('\uFFFD') === -1) {
-                    applyDroppedText(text);
-                    return;
-                }
-                // U+FFFD あり（BOM なし）: Shift_JIS で読み直す（確認なし）
-                var reader2 = new FileReader();
-                reader2.onload = function (ev2) {
-                    applyDroppedText(ev2.target.result);
-                };
-                reader2.onerror = function () {
-                    alert('ファイルを読み込めませんでした。');
-                };
-                reader2.readAsText(file, 'Shift_JIS');
-            };
-            reader.onerror = function () {
-                alert('ファイルを読み込めませんでした。');
-            };
-            reader.readAsArrayBuffer(file);
+            loadDroppedMarkdownFile(files[0]);
         });
 
         // 右側の表示領域ではファイルをドロップできないようにする
@@ -591,6 +780,32 @@ flowchart LR
             e.preventDefault();
             e.stopPropagation();
         });
+
+        /* エディタ折りたたみ時：左ガター（余白）と「エディタを表示」ボタン上へのドロップでファイル読込 */
+        if (mainWorkspace) {
+            mainWorkspace.addEventListener('dragover', function (e) {
+                if (!isPointerInCollapsedEditorGutter(e)) return;
+                e.preventDefault();
+                e.stopPropagation();
+                e.dataTransfer.dropEffect = 'copy';
+                mainWorkspace.classList.add('main-workspace-gutter-dragover');
+            });
+            mainWorkspace.addEventListener('dragleave', function (e) {
+                if (!document.body.classList.contains('editor-pane-collapsed')) return;
+                if (!mainWorkspace.contains(e.relatedTarget)) {
+                    clearCollapsedGutterDragHighlight();
+                }
+            });
+            mainWorkspace.addEventListener('drop', function (e) {
+                if (!isPointerInCollapsedEditorGutter(e)) return;
+                e.preventDefault();
+                e.stopPropagation();
+                clearCollapsedGutterDragHighlight();
+                var files = e.dataTransfer.files;
+                if (files && files.length > 0) loadDroppedMarkdownFile(files[0]);
+            });
+        }
+        document.addEventListener('dragend', clearCollapsedGutterDragHighlight);
 
         // 行番号を論理行の表示高さに合わせて更新（折り返し行は1つの行番号で表示）
         const lineMirror = document.getElementById('line-mirror');
@@ -688,8 +903,14 @@ flowchart LR
             input.dispatchEvent(new Event('input', { bubbles: true }));
         }
 
+        const contextMenuToggleEditor = document.getElementById('context-menu-toggle-editor');
         input.addEventListener('contextmenu', function (e) {
             e.preventDefault();
+            if (contextMenuToggleEditor) {
+                contextMenuToggleEditor.textContent = document.body.classList.contains('editor-pane-collapsed')
+                    ? 'エディタを表示'
+                    : 'エディタを隠す';
+            }
             contextMenu.style.left = e.clientX + 'px';
             contextMenu.style.top = e.clientY + 'px';
             contextMenu.classList.add('visible');
@@ -700,6 +921,8 @@ flowchart LR
                 const action = this.getAttribute('data-action');
                 if (action === 'page-break') {
                     insertPageBreakAtCursor();
+                } else if (action === 'toggle-editor-pane') {
+                    applyEditorPaneCollapsed(!document.body.classList.contains('editor-pane-collapsed'));
                 } else if (action === 'cut' || action === 'copy' || action === 'paste') {
                     input.focus();
                     document.execCommand(action);
