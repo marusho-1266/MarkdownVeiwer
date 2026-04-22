@@ -295,7 +295,7 @@
             min-height: 32px;
             cursor: pointer;
         }
-        .theme-toggle-wrap > #open-help:hover {
+        .theme-toggle-wrap > #open-guide:hover {
             filter: brightness(1.05);
         }
         .theme-toggle-wrap label {
@@ -388,6 +388,35 @@
             background-color: var(--code-bg);
         }
         
+        /* サイトフッター（ページ下部・各種情報ページへのリンク） */
+        #site-footer {
+            flex-shrink: 0;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 4px 14px;
+            padding: 8px 16px;
+            border-top: 1px solid var(--usage-hint-border);
+            background-color: var(--bg-body);
+            color: var(--text-muted);
+            font-size: 12px;
+        }
+        #site-footer a {
+            color: var(--text-muted);
+            text-decoration: none;
+        }
+        #site-footer a:hover {
+            color: var(--text-color);
+            text-decoration: underline;
+        }
+        #site-footer .footer-sep {
+            color: var(--border-color);
+        }
+        #site-footer .footer-copy {
+            margin-left: 4px;
+        }
+
         /* 印刷時のスタイル（プレビュー部分のみ印刷する） */
         @media print {
             body { 
@@ -398,6 +427,7 @@
             }
             body * { visibility: hidden; }
             #app-header { display: none; }
+            #site-footer { display: none; }
             #expand-editor-pane { display: none !important; }
             body.editor-pane-collapsed #main-workspace {
                 padding-left: 0 !important;
@@ -448,7 +478,7 @@
                 <span class="theme-icon-dark" aria-hidden="true" style="display:none;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span>
                 <span id="theme-label">ダークモード</span>
             </button>
-            <button type="button" id="open-help" title="手順・ヘルプを別ウィンドウで開きます（ポップアップがブロックされた場合はこのタブで開きます）">ヘルプ</button>
+            <button type="button" id="open-guide" title="使い方ガイドを別ウィンドウで開きます（ポップアップがブロックされた場合はこのタブで開きます）">使い方</button>
             <label style="display: inline-flex; align-items: center; gap: 6px; margin: 0; color: var(--text-color); cursor: pointer;">
                 <input type="checkbox" id="show-header-time" checked> ヘッダーに印刷時間を表示
             </label>
@@ -490,6 +520,19 @@ flowchart LR
         <div id="preview-area"></div>
     </div>
     </div><!-- /#main-workspace -->
+
+    <footer id="site-footer" role="contentinfo">
+        <a href="./docs/about.html">このサイトについて</a>
+        <span class="footer-sep" aria-hidden="true">|</span>
+        <a href="./docs/guide.html">使い方ガイド</a>
+        <span class="footer-sep" aria-hidden="true">|</span>
+        <a href="./docs/privacy.html">プライバシーポリシー</a>
+        <span class="footer-sep" aria-hidden="true">|</span>
+        <a href="./docs/terms.html">利用規約</a>
+        <span class="footer-sep" aria-hidden="true">|</span>
+        <a href="./docs/contact.html">お問い合わせ</a>
+        <span class="footer-copy">© Markdown Viewer</span>
+    </footer>
 
     <button type="button" id="expand-editor-pane" aria-controls="input-area" title="Markdown入力エリアを表示">エディタを表示</button>
 
@@ -651,13 +694,13 @@ flowchart LR
             applyGutter();
         })();
 
-        (function initHelpWindow() {
-            var helpBtn = document.getElementById('open-help');
-            if (!helpBtn) return;
-            var HELP_WINDOW_NAME = 'markdown-viewer-help';
-            helpBtn.addEventListener('click', function () {
-                var url = new URL('docs/help.html', window.location.href).href;
-                var w = window.open(url, HELP_WINDOW_NAME);
+        (function initGuideWindow() {
+            var guideBtn = document.getElementById('open-guide');
+            if (!guideBtn) return;
+            var GUIDE_WINDOW_NAME = 'markdown-viewer-guide';
+            guideBtn.addEventListener('click', function () {
+                var url = new URL('docs/guide.html', window.location.href).href;
+                var w = window.open(url, GUIDE_WINDOW_NAME);
                 if (!w) {
                     window.location.href = url;
                     return;

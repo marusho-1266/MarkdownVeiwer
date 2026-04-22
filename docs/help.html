@@ -3,119 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Markdown Viewer — ヘルプ</title>
-    <style>
-        :root {
-            --bg: #fff;
-            --text: #333;
-            --muted: #666;
-            --border: #ccc;
-            --code-bg: #f0f0f0;
-        }
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --bg: #1e1e1e;
-                --text: #d4d4d4;
-                --muted: #9d9d9d;
-                --border: #404040;
-                --code-bg: #3c3c3c;
-            }
-        }
-        body {
-            margin: 0;
-            padding: 24px 20px 48px;
-            max-width: 42rem;
-            margin-left: auto;
-            margin-right: auto;
-            font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-            line-height: 1.6;
-            background: var(--bg);
-            color: var(--text);
-        }
-        h1 { font-size: 1.35rem; margin-top: 0; }
-        h2 { font-size: 1.1rem; margin-top: 1.75rem; border-bottom: 1px solid var(--border); padding-bottom: 0.25rem; }
-        p, li { color: var(--text); }
-        .muted { color: var(--muted); font-size: 0.9rem; }
-        code {
-            font-size: 0.88em;
-            background: var(--code-bg);
-            padding: 0.15em 0.4em;
-            border-radius: 4px;
-        }
-        ol { padding-left: 1.25rem; }
-        a { color: #0066cc; }
-        @media (prefers-color-scheme: dark) {
-            a { color: #58a6ff; }
-        }
-        .back { margin-top: 2rem; }
-    </style>
+    <title>使い方ガイドへ移動 — Markdown Viewer</title>
+    <meta name="description" content="使い方の説明は使い方ガイドに集約されました。自動で案内先へ移動します。">
+    <link rel="canonical" href="https://markdownveiwer.onrender.com/docs/guide.html">
+    <link rel="stylesheet" href="./page.css">
+    <!-- 旧URL (help.html) ブックマーク互換: 本ページの案内先は使い方ガイドに一本化 -->
+    <meta http-equiv="refresh" content="0; url=./guide.html">
 </head>
 <body>
-    <h1>Markdown Viewer — ヘルプ</h1>
-    <p class="muted">左で編集・右でプレビューできるシンプルな Markdown ビューアの使い方です。</p>
-
-    <h2>基本の流れ</h2>
-    <ol>
-        <li>左のエディタに Markdown を入力すると、右にプレビューが表示されます。</li>
-        <li>ローカルの <code>.md</code> / <code>.markdown</code> / <code>.txt</code> の各形式ファイルは、<strong>左の入力エリア</strong>と<strong>右のプレビュー表示領域</strong>（プレビュー本文やその周辺）にドラッグ＆ドロップすることで内容を読み込めます。エディタを折りたたんだときは、左の余白（「エディタを表示」付近）へドロップしても同様です。複数ファイルを一度に落とした場合は<strong>先頭の 1 件のみ</strong>が対象です。</li>
-        <li>上部の<strong>印刷</strong>から、プレビュー内容を印刷できます（印刷ダイアログでプレビュー確認を推奨）。</li>
-    </ol>
-
-    <h2>画面上部のボタン・設定</h2>
-    <ul>
-        <li><strong>エディタを隠す / 表示</strong>：左パネルを折りたたみ、プレビューを広く表示します。折りたたみ中は画面左端の「エディタを表示」からも開けます。</li>
-        <li><strong>ダークモード</strong>：配色の切り替え（設定はブラウザに保存されます）。</li>
-        <li><strong>ヘッダーに印刷時間を表示</strong>：印刷時のヘッダーに日時を出すかどうか。</li>
-        <li><strong>スクロールを連動</strong>：オンにすると、左エディタと右プレビューの縦スクロール位置がおおよそ連動します。</li>
-    </ul>
-
-    <h2>Mermaid 図表</h2>
-    <p>コードブロックの言語に <code>mermaid</code> を指定すると図として描画されます。</p>
-    <pre style="background:var(--code-bg);padding:12px;border-radius:6px;overflow:auto;font-size:0.85rem;">```mermaid
-flowchart LR
-    A --&gt; B
-```</pre>
-
-    <h2>エディタの右クリック</h2>
-    <p>テキストエリア上で右クリックすると、切り取り・コピー・貼り付け、<strong>改ページを挿入</strong>（印刷時の改ページ用）、<strong>エディタを隠す／表示</strong>が選べます。</p>
-
-    <h2>左右の幅</h2>
-    <p>左パネルとプレビューの間の縦線をドラッグすると、幅の比率を変更できます（比率は保存されます）。</p>
-
-    <p class="back"><a href="../index.html" id="help-back-link">アプリに戻る</a></p>
-    <script>
-        (function () {
-            var a = document.getElementById('help-back-link');
-            if (!a) return;
-
-            function navigateBackOrAssign(returnUrl) {
-                if (window.history.length > 1) {
-                    try {
-                        window.history.back();
-                        return;
-                    } catch (err) {}
-                }
-                window.location.assign(returnUrl);
-            }
-
-            a.addEventListener('click', function (e) {
-                e.preventDefault();
-                var returnUrl = new URL(a.getAttribute('href') || '../index.html', window.location.href).href;
-
-                if (window.opener && !window.opener.closed) {
-                    try { window.opener.focus(); } catch (err1) {}
-                    try { window.close(); } catch (err2) {}
-                    setTimeout(function () {
-                        if (document.visibilityState === 'visible' && /help\.html$/i.test(window.location.pathname || '')) {
-                            navigateBackOrAssign(returnUrl);
-                        }
-                    }, 200);
-                    return;
-                }
-
-                navigateBackOrAssign(returnUrl);
-            });
-        })();
-    </script>
+    <h1>案内</h1>
+    <p>操作方法・Markdown 記法・印刷などの説明は、<strong><a href="./guide.html">使い方ガイド</a></strong> に集約しました。自動で移動しない場合はリンクを押してください。</p>
+    <p class="back"><a href="../index.html">← アプリに戻る</a></p>
 </body>
 </html>

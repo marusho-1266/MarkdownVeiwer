@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>このサイトについて — Markdown Viewer</title>
+    <meta name="description" content="ブラウザ上で動作する無料の Markdown エディタ / プレビュー / 印刷ツール「Markdown Viewer」の紹介、設計方針、対応機能、利用シーンをまとめたページです。">
+    <link rel="canonical" href="https://markdownveiwer.onrender.com/docs/about.html">
+    <link rel="stylesheet" href="./page.css">
+</head>
+<body>
+    <nav class="page-nav" aria-label="サイト内ナビゲーション">
+        <a href="../index.html">アプリに戻る</a>
+        <a href="./about.html" aria-current="page">このサイトについて</a>
+        <a href="./guide.html">使い方ガイド</a>
+        <a href="./privacy.html">プライバシー</a>
+        <a href="./terms.html">利用規約</a>
+        <a href="./contact.html">お問い合わせ</a>
+    </nav>
+
+    <h1>このサイトについて</h1>
+    <p class="muted">Markdown Viewer は、ブラウザだけで Markdown を書き・見て・印刷／PDF 化できる、インストール不要の軽量ツールです。</p>
+
+    <h2>コンセプト</h2>
+    <p>
+        議事録・仕様書・手順書・学習メモなど、日々の業務や学習で発生する「ちょっとした Markdown 文書」を、
+        <strong>インストール不要</strong>・<strong>ログイン不要</strong>で素早く整形して印刷／PDF 化することを目的としています。
+        ブラウザのタブをひとつ開くだけで使える点を最優先に、余分な機能は持たない設計としています。
+    </p>
+
+    <h2>主な特徴</h2>
+    <ul>
+        <li><strong>リアルタイムプレビュー</strong>：左側のエディタで入力した Markdown が、右側に即座に反映されます。</li>
+        <li><strong>ドラッグ＆ドロップ読み込み</strong>：ローカルの <code>.md</code> / <code>.markdown</code> / <code>.txt</code> ファイルを画面に落とすだけで読み込めます。</li>
+        <li><strong>Mermaid 図表</strong>：フローチャート、シーケンス図、ガントチャートなどを Markdown に直接書いて描画できます。</li>
+        <li><strong>印刷／PDF 出力</strong>：プレビューだけを対象に、ページ番号・印刷時刻・改ページを指定して印刷できます。ブラウザの「PDF として保存」でそのまま PDF 化できます。</li>
+        <li><strong>ダークモード</strong>：OS のテーマとは独立して切り替え可能。設定はブラウザに保存されます。</li>
+        <li><strong>オフラインで完結する編集</strong>：入力した Markdown の内容はサーバーに送信されません。処理はすべてブラウザ上で完結します。</li>
+    </ul>
+
+    <h2>想定される利用シーン</h2>
+    <ul>
+        <li>社内向けの簡易な手順書・仕様書の清書と印刷</li>
+        <li><strong>ChatGPTなどの生成AI</strong>が返した Markdown 形式の回答を、そのまま貼り付けてプレビュー・軽微な手直し・印刷／PDF 化する（追加の導入物なしで、ブラウザだけで完結します）</li>
+        <li>議事録や学習ノートを整形して PDF で保管</li>
+        <li>GitHub や Qiita 等に貼る前の Markdown の整形確認</li>
+        <li>Mermaid による図表のプレビュー</li>
+    </ul>
+
+    <h2>技術スタック</h2>
+    <ul>
+        <li>Markdown パーサー: <a href="https://marked.js.org/" rel="noopener noreferrer">Marked.js</a></li>
+        <li>HTML サニタイズ: <a href="https://github.com/cure53/DOMPurify" rel="noopener noreferrer">DOMPurify</a></li>
+        <li>図表: <a href="https://mermaid.js.org/" rel="noopener noreferrer">Mermaid</a></li>
+        <li>フロント: 素の HTML / CSS / JavaScript（単一ファイル構成）</li>
+        <li>ホスティング: <a href="https://render.com/" rel="noopener noreferrer">Render</a> の静的サイト</li>
+    </ul>
+
+    <h2>データの取り扱い</h2>
+    <p>
+        編集中の Markdown テキストは<strong>ブラウザ内でのみ処理</strong>され、サーバーへアップロードされません。
+        アクセス解析のため Google Analytics を利用しているほか、広告配信のため Google AdSense を利用する場合があります。
+        詳細は <a href="./privacy.html">プライバシーポリシー</a> をご覧ください。
+    </p>
+
+    <h2>ソースコード</h2>
+    <p>
+        本アプリは個人プロジェクトとして公開しています。ソースコードや改善要望は
+        <a href="https://github.com/marusho-1266/MarkdownVeiwer" rel="noopener noreferrer">GitHub リポジトリ</a> から確認・ご連絡いただけます。
+    </p>
+
+    <p class="back"><a href="../index.html">← アプリに戻る</a></p>
+</body>
+</html>

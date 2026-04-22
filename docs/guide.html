@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>使い方ガイド — Markdown Viewer</title>
+    <meta name="description" content="Markdown Viewer の詳細な使い方ガイド。基本的な Markdown 記法、Mermaid 図表、印刷 / PDF 出力、ドラッグ＆ドロップでのファイル読み込み、ショートカットなどを解説します。">
+    <link rel="canonical" href="https://markdownveiwer.onrender.com/docs/guide.html">
+    <link rel="stylesheet" href="./page.css">
+</head>
+<body>
+    <nav class="page-nav" aria-label="サイト内ナビゲーション">
+        <a href="../index.html">アプリに戻る</a>
+        <a href="./about.html">このサイトについて</a>
+        <a href="./guide.html" aria-current="page">使い方ガイド</a>
+        <a href="./privacy.html">プライバシー</a>
+        <a href="./terms.html">利用規約</a>
+        <a href="./contact.html">お問い合わせ</a>
+    </nav>
+
+    <h1>使い方ガイド</h1>
+    <p class="muted">ここでは Markdown Viewer の詳細な使い方と、よく使う Markdown 記法・Mermaid 図表の書き方・印刷テクニックをまとめています。</p>
+
+    <h2>1. 画面構成</h2>
+    <ul>
+        <li><strong>上部ヘッダー</strong>：印刷・エディタ表示切替・ダークモード・<strong>使い方</strong>（本ガイドを別ウィンドウで開く）・印刷時刻のオン/オフ・スクロール連動など。</li>
+        <li><strong>左パネル（エディタ）</strong>：Markdown を入力する領域。行番号付きのテキストエリアです。</li>
+        <li><strong>中央リサイザー</strong>：縦線をドラッグすると左右パネルの幅を調整できます（設定はブラウザに保存）。</li>
+        <li><strong>右パネル（プレビュー）</strong>：入力した Markdown をリアルタイムに HTML 化して表示します。</li>
+    </ul>
+
+    <h2>2. ファイルの読み込み方</h2>
+    <ol>
+        <li>PC のファイラから <code>.md</code>、<code>.markdown</code>、<code>.txt</code> のいずれかを選ぶ。</li>
+        <li>エディタ領域またはプレビュー領域へドラッグ＆ドロップする。</li>
+        <li>既存のエディタ内容が置き換えられ、プレビューが更新されます。</li>
+    </ol>
+    <div class="note">
+        <strong>補足：</strong>複数ファイルを一度にドロップした場合は、<strong>先頭の 1 件のみ</strong>が読み込まれます。ローカル処理のため、ファイルの内容はネットワーク上に送信されません。
+    </div>
+
+    <h2>3. よく使う Markdown 記法</h2>
+
+    <h3>見出し</h3>
+<pre><code># 見出し1
+## 見出し2
+### 見出し3</code></pre>
+
+    <h3>強調・取り消し線</h3>
+<pre><code>**太字** *斜体* ~~取り消し線~~</code></pre>
+
+    <h3>リスト</h3>
+<pre><code>- 箇条書き1
+- 箇条書き2
+    - ネスト項目
+
+1. 番号付き1
+2. 番号付き2</code></pre>
+
+    <h3>リンク・画像</h3>
+<pre><code>[表示テキスト](https://example.com/)
+![代替テキスト](https://example.com/image.png)</code></pre>
+
+    <h3>コード</h3>
+<pre><code>インラインは `code` のようにバッククオートで囲みます。
+
+```js
+function hello() {
+  console.log("hello");
+}
+```</code></pre>
+
+    <h3>テーブル</h3>
+<pre><code>| 列1 | 列2 | 列3 |
+| --- | --- | --- |
+| A   | B   | C   |
+| 1   | 2   | 3   |</code></pre>
+
+    <h3>引用・水平線</h3>
+<pre><code>> 引用ブロック
+
+---</code></pre>
+
+    <h2>4. Mermaid 図表</h2>
+    <p>コードブロックの言語指定を <code>mermaid</code> にすると、図として描画されます。</p>
+<pre><code>```mermaid
+flowchart LR
+    A[開始] --&gt; B{条件}
+    B -- Yes --&gt; C[処理A]
+    B -- No  --&gt; D[処理B]
+    C --&gt; E[終了]
+    D --&gt; E
+```</code></pre>
+    <p>フローチャートのほか、シーケンス図（<code>sequenceDiagram</code>）、ガントチャート（<code>gantt</code>）、クラス図（<code>classDiagram</code>）などにも対応します。詳細は <a href="https://mermaid.js.org/" rel="noopener noreferrer">Mermaid 公式ドキュメント</a> をご参照ください。</p>
+
+    <h2>5. 印刷 / PDF への出力</h2>
+    <ol>
+        <li>ヘッダー右側の<strong>「印刷」</strong>ボタンを押します。</li>
+        <li>ブラウザの印刷ダイアログで、プリンターの代わりに「<strong>PDF として保存</strong>」を選ぶと PDF を生成できます。</li>
+        <li>「ヘッダーに印刷時間を表示」をオンにすると、印刷時の右上に日時が入ります。</li>
+        <li>フッターには <code>現在ページ / 総ページ数</code> が自動で入ります。</li>
+    </ol>
+
+    <h3>改ページを指定したい</h3>
+    <p>エディタ上で右クリックして「<strong>改ページを挿入</strong>」を選ぶと、その位置にカーソルがある行の先頭へ改ページ用の HTML が挿入されます。印刷時にその位置で必ず改ページされます。</p>
+
+    <h2>6. その他の操作</h2>
+    <table>
+        <thead>
+            <tr><th>操作</th><th>方法</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>エディタを折りたたむ / 表示する</td><td>ヘッダーの「エディタを隠す / 表示」ボタン、またはエディタ上で右クリック</td></tr>
+            <tr><td>ダークモード切替</td><td>ヘッダーの「ダークモード」ボタン（設定はブラウザに保存）</td></tr>
+            <tr><td>左右パネルの幅変更</td><td>中央の縦線をドラッグ（比率はブラウザに保存）</td></tr>
+            <tr><td>スクロール連動</td><td>ヘッダーの「スクロールを連動」チェックボックス</td></tr>
+            <tr><td>切り取り / コピー / 貼り付け</td><td>エディタ上で右クリックメニュー、または OS 標準ショートカット</td></tr>
+        </tbody>
+    </table>
+
+    <h2>7. よくあるご質問</h2>
+
+    <h3>Q. 入力した Markdown はサーバーに送信されますか？</h3>
+    <p>A. いいえ。プレビュー変換・印刷処理はすべてお使いのブラウザ内で完結します。入力した本文がサーバーへアップロードされることはありません。</p>
+
+    <h3>Q. スマートフォンでも使えますか？</h3>
+    <p>A. 表示は可能ですが、エディタと左右パネル構成のため画面サイズの大きい PC・タブレットを推奨します。</p>
+
+    <h3>Q. 印刷時に、左のエディタも一緒に印刷されてしまいます</h3>
+    <p>A. 本アプリは、印刷時にエディタ側を非表示にする CSS を適用しています。ブラウザの印刷設定で「背景グラフィック」「ヘッダーとフッター」を適宜切り替えると意図通りのレイアウトになりやすいです。</p>
+
+    <h3>Q. 対応しない Markdown 記法はありますか？</h3>
+    <p>A. 基本的な Markdown 記法には対応していますが、一部の拡張記法（脚注、MathJax による数式など）は未対応の場合があります。</p>
+
+    <p class="back"><a href="../index.html">← アプリに戻る</a></p>
+</body>
+</html>

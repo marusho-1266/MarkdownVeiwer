@@ -32,62 +32,38 @@ Markdownエディタと印刷ツールを統合したシンプルなWebアプリ
 - **図表ライブラリ**: [Mermaid.js](https://mermaid.js.org/) (CDN経由)
 - **対応ブラウザ**: モダンブラウザ（Chrome、Firefox、Edge、Safariなど）
 - **依存関係**: 外部ライブラリのみ（CDN経由）
+- **配布形態**: ビルド不要の静的ファイルのみ。利用するホスティングの手順は各自の環境に合わせてください
 
 ## ファイル構成
 
 ```
 MarkdownViewer/
-├── index.html           # メインのHTMLファイル（単一ファイルで完結）
-├── README.md            # このファイル
-└── .nojekyll            # GitHub PagesでJekyllを無効化するファイル
+├── index.html               # メインのHTMLファイル（単一ファイルで完結）
+├── README.md                # このファイル
+├── .nojekyll                # 一部のホスティングで Jekyll 処理を避けるための空ファイル
+├── render.yaml              # 静的サイト用のデプロイ設定例（使用する場合のみ）
+└── docs/                    # 補助ページ
+    ├── page.css             # 補助ページ共通スタイル
+    ├── about.html           # このサイトについて
+    ├── guide.html           # 詳しい使い方ガイド
+    ├── help.html            # 使い方ガイド（guide.html）への案内（旧URL・ブックマーク互換）
+    ├── privacy.html         # プライバシーポリシー
+    ├── terms.html           # 利用規約
+    └── contact.html         # お問い合わせ
 ```
 
-## GitHub Pagesでの公開
+## 補助ページ
 
-このプロジェクトをGitHub Pagesで公開する場合：
+`index.html` 下部のフッターから、以下のページへアクセスできます。
+いずれも静的 HTML + CSS のみで構成されており、広告配信（Google AdSense）や
+アクセス解析（Google Analytics）の利用にあたって必要な情報開示をまとめています。
 
-1. リポジトリのSettings > Pagesで、ソースブランチを選択して公開を有効化します
-2. `.nojekyll`ファイルが含まれているため、Jekyllは無効化され、`index.html`が直接表示されます
-3. 公開後、`https://[ユーザー名].github.io/[リポジトリ名]/` でアクセスできます
-
-**注意**: `.nojekyll`ファイルがない場合、GitHub PagesはJekyllを使用してREADME.mdを自動的にレンダリングするため、`index.html`ではなくREADME.mdが表示されることがあります。
-
-## Renderでのホスティング
-
-このプロジェクトを [Render](https://render.com/) の Static Site で公開する場合の手順と注意点です。
-
-### 手順
-
-1. [Render Dashboard](https://dashboard.render.com/) で **New > Static Site** を選択
-2. GitHub のリポジトリを接続
-3. デプロイするブランチを指定（例: `main`）
-4. **Build Command**: **空のまま**（ビルド不要な静的HTMLのため）
-5. **Publish Directory**: **`.`**（ルートディレクトリに `index.html` があるため）
-6. **Create Static Site** で作成
-
-### 注意点
-
-- **ビルドコマンド**: 本システムはビルド不要のため、Build Command は**空欄**にしてください。何か入力すると「コマンドがない」等で失敗する場合があります。
-- **Publish Directory**: 必ず **`.`** を指定してください。空や `public` などにすると `index.html` が配信されません。
-- **依存関係の自動検出**: Render はデフォルトで npm 等の依存関係を検出しようとします。本プロジェクトは `package.json` がなく CDN のみのため問題になりませんが、ビルドがスキップされるか短時間で完了する想定です。
-- **無料プラン**: 静的サイトは無料でデプロイできますが、ワークスペースの**月間送信帯域（Outbound Bandwidth）**の枠を消費します（Hobby で 100 GB/月など）。枠超過時は有料になります。
-- **スリープ**: 静的サイトは Web Service と異なり**スリープしません**。常時 CDN から配信されるため、初回アクセス待ちは発生しません。
-- **URL**: デプロイ後は `https://[サービス名].onrender.com` でアクセスできます。カスタムドメインも設定可能です（無料プランではワークスペースあたり 2 ドメインまで）。
-
-### render.yaml で設定する場合（任意）
-
-リポジトリに `render.yaml` を置くと、同じ設定をコードで管理できます。
-
-```yaml
-services:
-  - type: web
-    name: markdown-viewer
-    runtime: static
-    buildCommand: "true"   # ビルド不要のため no-op（空だと失敗する場合があるため）
-    staticPublishPath: .
-```
-
-※ Static Site は `type: web` と `runtime: static` の組み合わせで定義します。Dashboard で「Static Site」を選んだ場合と同じです。
+- **このサイトについて** (`docs/about.html`) — サイトのコンセプト・機能・技術スタック
+- **使い方ガイド** (`docs/guide.html`) — 操作説明、Markdown 記法、Mermaid、印刷 / PDF、よくある質問（ツールバーの「使い方」からも開けます）
+- **ヘルプ** (`docs/help.html`) — 上記使い方ガイドへ誘導（旧 URL・ブックマーク互換）
+- **プライバシーポリシー** (`docs/privacy.html`) — Cookie、Google Analytics、AdSense 等の情報開示
+- **利用規約** (`docs/terms.html`) — 本サービスの利用条件
+- **お問い合わせ** (`docs/contact.html`) — GitHub Issues での連絡先案内
 
 ## 注意事項
 
