@@ -2,6 +2,7 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Permissions-Policy" content="clipboard-read=(self), clipboard-write=(self)">
     <title>MarkdownViewer</title>
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-PW01K4QNQQ"></script>
@@ -989,6 +990,24 @@ flowchart LR
             dispatchInputChange();
         }
 
+        function pasteFromClipboard() {
+            if (!navigator.clipboard || !navigator.clipboard.readText) {
+                notifyClipboardError('お使いのブラウザでは右クリックからの貼り付けに対応していません。Ctrl+V をお試しください。');
+                return;
+            }
+            var readPromise = navigator.clipboard.readText();
+            readPromise.then(function (text) {
+                if (text) {
+                    restoreSelection();
+                    insertTextAtSelection(text);
+                }
+            }).catch(function (err) {
+                console.error('Clipboard paste failed:', err);
+                restoreSelection();
+                notifyClipboardError('貼り付けに失敗しました。サイトのクリップボード権限を許可するか、Ctrl+V をお試しください。');
+            });
+        }
+
         async function handleClipboardAction(action) {
             restoreSelection();
             const start = savedSelection.start;
@@ -1033,26 +1052,6 @@ flowchart LR
                 notifyClipboardError('切り取りに失敗しました。');
                 return;
             }
-
-            if (action === 'paste') {
-                if (navigator.clipboard) {
-                    try {
-                        const text = await navigator.clipboard.readText();
-                        if (text) {
-                            insertTextAtSelection(text);
-                        }
-                        return;
-                    } catch (err) {
-                        console.error('Clipboard paste failed:', err);
-                    }
-                }
-                restoreSelection();
-                if (document.execCommand('paste')) {
-                    dispatchInputChange();
-                    return;
-                }
-                notifyClipboardError('貼り付けに失敗しました。Ctrl+V をお試しください。');
-            }
         }
 
         const contextMenuToggleEditor = document.getElementById('context-menu-toggle-editor');
@@ -1073,13 +1072,36 @@ flowchart LR
         });
 
         contextMenu.querySelectorAll('.context-menu-item').forEach(function (btn) {
-            btn.addEventListener('click', function () {
+            var pasteTriggered = false;
+            btn.addEventListener('mousedown', function (e) {
+                e.preventDefault();
+            });
+            btn.addEventListener('pointerdown', function (e) {
+                if (this.getAttribute('data-action') !== 'paste') return;
+                if (e.pointerType !== 'mouse') return;
+                e.preventDefault();
+                e.stopPropagation();
+                pasteTriggered = true;
+                hideContextMenu();
+                pasteFromClipboard();
+            });
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
                 const action = this.getAttribute('data-action');
+                if (action === 'paste') {
+                    if (pasteTriggered) {
+                        pasteTriggered = false;
+                        return;
+                    }
+                    hideContextMenu();
+                    pasteFromClipboard();
+                    return;
+                }
                 if (action === 'page-break') {
                     insertPageBreakAtCursor();
                 } else if (action === 'toggle-editor-pane') {
                     applyEditorPaneCollapsed(!document.body.classList.contains('editor-pane-collapsed'));
-                } else if (action === 'cut' || action === 'copy' || action === 'paste') {
+                } else if (action === 'cut' || action === 'copy') {
                     handleClipboardAction(action);
                 }
                 hideContextMenu();
