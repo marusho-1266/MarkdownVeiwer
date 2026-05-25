@@ -945,26 +945,123 @@ flowchart LR
         // 右クリックメニュー（改ページ・切り取り・コピー・貼り付け）
         const contextMenu = document.getElementById('context-menu');
         const PAGE_BREAK_HTML = '\n<div style="page-break-after: always;"></div>\n';
+        let savedSelection = { start: 0, end: 0 };
 
         function hideContextMenu() {
             contextMenu.classList.remove('visible');
         }
 
+        function restoreSelection() {
+            input.focus();
+            input.setSelectionRange(savedSelection.start, savedSelection.end);
+        }
+
+        function dispatchInputChange() {
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
+        function notifyClipboardError(message) {
+            console.error(message);
+            alert(message);
+        }
+
         function insertPageBreakAtCursor() {
-            const pos = input.selectionStart;
+            restoreSelection();
+            const pos = savedSelection.start;
             const text = input.value;
             const lineStart = text.lastIndexOf('\n', pos - 1) + 1;
             const before = text.slice(0, lineStart);
             const after = text.slice(lineStart);
             input.value = before + PAGE_BREAK_HTML + after;
-            input.selectionStart = input.selectionEnd = lineStart + PAGE_BREAK_HTML.length;
-            input.focus();
-            input.dispatchEvent(new Event('input', { bubbles: true }));
+            const newPos = lineStart + PAGE_BREAK_HTML.length;
+            input.selectionStart = input.selectionEnd = newPos;
+            savedSelection = { start: newPos, end: newPos };
+            dispatchInputChange();
+        }
+
+        function insertTextAtSelection(text) {
+            const start = savedSelection.start;
+            const end = savedSelection.end;
+            input.value = input.value.slice(0, start) + text + input.value.slice(end);
+            const newPos = start + text.length;
+            input.selectionStart = input.selectionEnd = newPos;
+            savedSelection = { start: newPos, end: newPos };
+            dispatchInputChange();
+        }
+
+        async function handleClipboardAction(action) {
+            restoreSelection();
+            const start = savedSelection.start;
+            const end = savedSelection.end;
+            const selectedText = input.value.slice(start, end);
+
+            if (action === 'copy') {
+                if (!selectedText) return;
+                if (navigator.clipboard) {
+                    try {
+                        await navigator.clipboard.writeText(selectedText);
+                        return;
+                    } catch (err) {
+                        console.error('Clipboard copy failed:', err);
+                    }
+                }
+                restoreSelection();
+                if (document.execCommand('copy')) return;
+                notifyClipboardError('コピーに失敗しました。');
+                return;
+            }
+
+            if (action === 'cut') {
+                if (!selectedText) return;
+                if (navigator.clipboard) {
+                    try {
+                        await navigator.clipboard.writeText(selectedText);
+                        input.value = input.value.slice(0, start) + input.value.slice(end);
+                        input.selectionStart = input.selectionEnd = start;
+                        savedSelection = { start: start, end: start };
+                        dispatchInputChange();
+                        return;
+                    } catch (err) {
+                        console.error('Clipboard cut failed:', err);
+                    }
+                }
+                restoreSelection();
+                if (document.execCommand('cut')) {
+                    dispatchInputChange();
+                    return;
+                }
+                notifyClipboardError('切り取りに失敗しました。');
+                return;
+            }
+
+            if (action === 'paste') {
+                if (navigator.clipboard) {
+                    try {
+                        const text = await navigator.clipboard.readText();
+                        if (text) {
+                            insertTextAtSelection(text);
+                        }
+                        return;
+                    } catch (err) {
+                        console.error('Clipboard paste failed:', err);
+                    }
+                }
+                restoreSelection();
+                if (document.execCommand('paste')) {
+                    dispatchInputChange();
+                    return;
+                }
+                notifyClipboardError('貼り付けに失敗しました。Ctrl+V をお試しください。');
+            }
         }
 
         const contextMenuToggleEditor = document.getElementById('context-menu-toggle-editor');
         input.addEventListener('contextmenu', function (e) {
             e.preventDefault();
+            savedSelection = {
+                start: input.selectionStart,
+                end: input.selectionEnd
+            };
             if (contextMenuToggleEditor) {
                 contextMenuToggleEditor.textContent = document.body.classList.contains('editor-pane-collapsed')
                     ? 'エディタを表示'
@@ -983,9 +1080,7 @@ flowchart LR
                 } else if (action === 'toggle-editor-pane') {
                     applyEditorPaneCollapsed(!document.body.classList.contains('editor-pane-collapsed'));
                 } else if (action === 'cut' || action === 'copy' || action === 'paste') {
-                    input.focus();
-                    document.execCommand(action);
-                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    handleClipboardAction(action);
                 }
                 hideContextMenu();
             });
